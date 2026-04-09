@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Certificate of Achievement</title>
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;700;800&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: #f0f2f5;
+            font-family: 'Sora', sans-serif;
+            -webkit-print-color-adjust: exact;
+        }
+
+        .certificate-container {
+            width: 1000px;
+            height: 700px;
+            background: #fff;
+            position: relative;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 60px;
+            box-sizing: border-box;
+            border: 20px solid #eceff1;
+            overflow: hidden;
+        }
+
+        .border-decoration {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border: 5px solid #8b5cf6;
+            margin: 10px;
+            pointer-events: none;
+        }
+
+        .corner {
+            position: absolute;
+            width: 150px;
+            height: 150px;
+            background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
+            z-index: 1;
+        }
+
+        .corner-tl { top: -75px; left: -75px; transform: rotate(45deg); }
+        .corner-tr { top: -75px; right: -75px; transform: rotate(135deg); }
+        .corner-bl { bottom: -75px; left: -75px; transform: rotate(-45deg); }
+        .corner-br { bottom: -75px; right: -75px; transform: rotate(-135deg); }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 800;
+            color: #8b5cf6;
+            margin-bottom: 40px;
+            letter-spacing: -1px;
+        }
+
+        .title {
+            font-family: 'Playfair Display', serif;
+            font-size: 56px;
+            color: #1e293b;
+            margin: 0 0 10px 0;
+            font-style: italic;
+        }
+
+        .subtitle {
+            font-size: 18px;
+            color: #64748b;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            margin-bottom: 50px;
+        }
+
+        .presented-to {
+            font-size: 20px;
+            color: #64748b;
+            margin-bottom: 10px;
+        }
+
+        .recipient-name {
+            font-family: 'Playfair Display', serif;
+            font-size: 48px;
+            color: #8b5cf6;
+            border-bottom: 2px solid #e2e8f0;
+            padding: 0 40px 10px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .description {
+            font-size: 18px;
+            color: #475569;
+            text-align: center;
+            max-width: 700px;
+            line-height: 1.6;
+            margin-bottom: 50px;
+        }
+
+        .footer {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin-top: auto;
+        }
+
+        .signature-block {
+            text-align: center;
+            width: 200px;
+        }
+
+        .signature-line {
+            border-top: 1px solid #94a3b8;
+            margin-bottom: 10px;
+            padding-top: 5px;
+        }
+
+        .signature-name {
+            font-size: 14px;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        .signature-title {
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        .verification {
+            position: absolute;
+            bottom: 30px;
+            font-size: 11px;
+            color: #94a3b8;
+            font-family: monospace;
+        }
+
+        .print-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #8b5cf6;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(139,92,246,0.3);
+            z-index: 100;
+        }
+
+        @media print {
+            .print-btn { display: none; }
+            body { background: white; }
+            .certificate-container { box-shadow: none; border: none; }
+        }
+    </style>
+</head>
+<body>
+    <button class="print-btn" onclick="window.print()">Print / Save as PDF</button>
+
+    <div class="certificate-container" id="cert-content">
+        <div class="corner corner-tl"></div>
+        <div class="corner corner-tr"></div>
+        <div class="corner corner-bl"></div>
+        <div class="corner corner-br"></div>
+        <div class="border-decoration"></div>
+
+        <div class="logo">SESSIONFLOW</div>
+        
+        <h1 class="title">Certificate of Achievement</h1>
+        <div class="subtitle">Official Recognition</div>
+
+        <div class="presented-to">This certificate is proudly presented to</div>
+        <div class="recipient-name" id="user-name">Loading...</div>
+
+        <div class="description">
+            For their exceptional participation and successful completion of the session <br>
+            <strong id="session-title" style="color: #1e293b;">Loading Session...</strong><br>
+            conducted by SessionFlow Education Platform.
+        </div>
+
+        <div class="footer">
+            <div class="signature-block">
+                <div class="signature-line"></div>
+                <div class="signature-name">Dr. Vikram Rao</div>
+                <div class="signature-title">Director, SessionFlow</div>
+            </div>
+            
+            <div style="text-align: center;">
+                <div style="font-size: 14px; color: #1e293b; font-weight: 700;" id="current-date">Date</div>
+                <div style="font-size: 12px; color: #64748b;">Issued On</div>
+            </div>
+
+            <div class="signature-block">
+                <div class="signature-line"></div>
+                <div class="signature-name">Neha Joshi</div>
+                <div class="signature-title">Program Coordinator</div>
+            </div>
+        </div>
+
+        <div class="verification">
+            VERIFICATION CODE: <span id="verify-code">N/A</span> | VERIFY AT SESSIONFLOW.APP/VERIFY
+        </div>
+    </div>
+
+    <script>
+        // Get params from URL
+        const params = new URLSearchParams(window.location.search);
+        const name = params.get('user') || 'Participant Name';
+        const session = params.get('session') || 'Workshop Session';
+        const code = params.get('code') || 'SF-' + Math.random().toString(36).substring(2,8).toUpperCase();
+        
+        document.getElementById('user-name').innerText = name;
+        document.getElementById('session-title').innerText = session;
+        document.getElementById('verify-code').innerText = code;
+        document.getElementById('current-date').innerText = new Date().toLocaleDateString('en-IN', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric'
+        });
+
+        // Optional: Auto-trigger print
+        // setTimeout(() => window.print(), 1000);
+    </script>
+</body>
+</html>
