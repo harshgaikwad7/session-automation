@@ -1,7 +1,7 @@
 // ── Central API Helper — SessionFlow Frontend ──────────────────────────────
 // All API calls go through this file
 
-const API_URL = 'http://localhost:8000'
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
 // ── Auth helpers ───────────────────────────────────────────────────────────
 
