@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import logo from './assets/renovatio_logo.png'
 
@@ -52,7 +52,7 @@ export default function AuthPage() {
     await new Promise(r => setTimeout(r, 900))
     const found = DEMO_USERS.find(u => u.email === form.email && u.password === form.password)
     if (found) {
-      const { password, ...user } = found
+      const user = { id: found.id, name: found.name, email: found.email, phone: found.phone, role: found.role, joinedOn: found.joinedOn }
       localStorage.setItem('sf_user', JSON.stringify(user))
       localStorage.setItem('user',    JSON.stringify(user))
       navigate('/home')
@@ -89,7 +89,9 @@ export default function AuthPage() {
   }
 
   const handleKey = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') mode === 'login' ? handleLogin() : handleRegister()
+    if (e.key === 'Enter') {
+      if (mode === 'login') handleLogin(); else handleRegister();
+    }
   }
 
   const inputStyle: React.CSSProperties = {

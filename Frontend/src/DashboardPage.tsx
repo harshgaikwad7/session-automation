@@ -1,5 +1,5 @@
 'use client'
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 // ── TYPES ──────────────────────────────────────────────────────────────────
@@ -60,7 +60,7 @@ const getLiveUser = () => {
         if (u.joinedOn) base.joinedOn = u.joinedOn.slice(0, 10);
         if (u.role) base.role = u.role;
       }
-    } catch {}
+    } catch { /* ignore */ }
   }
   return base;
 };

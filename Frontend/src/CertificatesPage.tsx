@@ -1,5 +1,5 @@
 // ── CERTIFICATES PAGE (mock mode — Supabase disabled) ─────────────────────
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 interface Certificate {
@@ -71,7 +71,7 @@ const getLiveUser = () => {
         if (u.name) base.name = u.name;
         if (u.email) base.email = u.email;
       }
-    } catch {}
+    } catch { /* ignore */ }
   }
   return base;
 };

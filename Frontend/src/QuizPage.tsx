@@ -1,5 +1,5 @@
 // ── QUIZ PAGE — SessionFlow
-import React, { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 // ── Mock Quiz Data ─────────────────────────────────────────────

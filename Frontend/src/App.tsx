@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { BrowserRouter as Router, Routes, Route, NavLink, useNavigate, Navigate, useLocation } from 'react-router-dom';
 import { chatWithFAQ } from './api'
 import RegisterPage from './RegisterPage'
@@ -13,7 +13,15 @@ import QuizPage from './QuizPage'
 import FAQPage from './FAQPage'
 import AuthPage from './AuthPage'
 
-// ── Styles (Must be defined at TOP to avoid TDZ issues) ──────────
+// ── TYPES ──────────────────────────────────────────────────────────────────
+
+interface Message {
+  role: 'user' | 'assistant'
+  content: string
+  ts: number
+}
+
+// ── Styles ──────────────────────────────────────────────────────────────────
 const styles: Record<string, React.CSSProperties> = {
   root: {
     minHeight: "100vh", background: "#2a1b5b", color: "#E2E0FF",
@@ -105,7 +113,6 @@ const styles: Record<string, React.CSSProperties> = {
   chatOpt: { background: "rgba(108,99,255,0.12)", border: "1px solid rgba(108,99,255,0.25)", borderRadius: "8px", padding: "9px 12px", color: "#A78BFA", fontSize: "0.8rem", fontWeight: "500", cursor: "pointer", textAlign: "left", fontFamily: "inherit", transition: "background 0.2s" },
 };
 
-
 const FEATURES = [
   { icon: "🗓️", title: "Schedule",     desc: "Real-time session schedule, speakers & venue",   color: "#6C63FF" },
   { icon: "📋", title: "Register",     desc: "One-click registration with confirmation",         color: "#A78BFA" },
@@ -125,31 +132,34 @@ const STATS = [
   { value: "50+",  label: "NGO Partners" },
 ];
 
-// ── Auth guard — redirects to /login if not logged in ──────────
+// ── Auth guard ─────────────────────────────────────────────────
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const user = localStorage.getItem('sf_user')
   if (!user) return <Navigate to="/login" replace />
   return <>{children}</>
 }
 
-// ── Already logged in — redirects to /home if already authed ───
 function RedirectIfAuthed({ children }: { children: React.ReactNode }) {
   const user = localStorage.getItem('sf_user')
   if (user) return <Navigate to="/home" replace />
   return <>{children}</>
 }
 
-// ── Smart Global Chatbot component ──────────────────────────────
+// ── ChatAssistant ──────────────────────────────────────────────
 const ChatAssistant = () => {
   const location = useLocation()
   const [open, setOpen] = useState(false)
-  const [messages, setMessages] = useState<any[]>([
-    { role: 'assistant', content: "Hi! 👋 I'm your SessionFlow assistant. Ask me anything about registration, certificates, or the schedule!", ts: Date.now() }
-  ])
+  const initialMessage: Message = {
+    role: 'assistant',
+    content: "Hi! 👋 I'm your SessionFlow assistant. Ask me anything about registration, certificates, or the schedule!",
+    ts: Date.now()
+  }
+  const [messages, setMessages] = useState<Message[]>([initialMessage])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const chatEndRef = useRef<HTMLDivElement>(null)
 
+  // ✅ FIX: scrollToBottom is now properly defined as a function
   const scrollToBottom = () => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }
@@ -172,17 +182,15 @@ const ChatAssistant = () => {
 
   const handleSend = async () => {
     if (!input.trim() || loading) return
-    const userMsg = { role: 'user', content: input, ts: Date.now() }
+    const userMsg: Message = { role: 'user', content: input, ts: Date.now() }
     setMessages(prev => [...prev, userMsg])
     setInput('')
     setLoading(true)
 
     try {
-      // Try real backend AI
       const res = await chatWithFAQ([...messages, userMsg].map(m => ({ role: m.role, content: m.content })))
       setMessages(prev => [...prev, { role: 'assistant', content: res.reply || "I'm thinking...", ts: Date.now() }])
     } catch {
-      // Fallback to Smart Mock Brain
       setTimeout(() => {
         setMessages(prev => [...prev, { role: 'assistant', content: getMockResponse(userMsg.content), ts: Date.now() }])
         setLoading(false)
@@ -192,12 +200,15 @@ const ChatAssistant = () => {
     setLoading(false)
   }
 
-  if (location.pathname === '/login') return null;
+  if (location.pathname === '/login') return null
 
   return (
     <>
-      <button style={{ ...styles.chatBubble, ...(open ? styles.chatBubbleOpen : {}) }}
-        onClick={() => setOpen(!open)} title="Help">
+      <button
+        style={{ ...styles.chatBubble, ...(open ? styles.chatBubbleOpen : {}) }}
+        onClick={() => setOpen(!open)}
+        title="Help"
+      >
         {open ? "✕" : "💬"}
       </button>
 
@@ -210,10 +221,10 @@ const ChatAssistant = () => {
             </div>
             <button style={styles.chatClose} onClick={() => setOpen(false)}>✕</button>
           </div>
-          
+
           <div style={{ ...styles.chatBody, height: 350, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 12, scrollbarWidth: 'thin' }}>
             {messages.map((m, i) => (
-              <div key={i} style={{ 
+              <div key={i} style={{
                 alignSelf: m.role === 'user' ? 'flex-end' : 'flex-start',
                 background: m.role === 'user' ? 'linear-gradient(135deg, #6d28d9, #4c1d95)' : 'rgba(255,255,255,0.06)',
                 padding: '10px 14px',
@@ -238,8 +249,8 @@ const ChatAssistant = () => {
           </div>
 
           <div style={{ padding: '14px', borderTop: '1px solid rgba(139,92,246,0.2)', display: 'flex', gap: 10 }}>
-            <input 
-              value={input} 
+            <input
+              value={input}
               onChange={e => setInput(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleSend()}
               placeholder="Type your message..."
@@ -253,26 +264,25 @@ const ChatAssistant = () => {
   )
 }
 
-// ── Home page ──────────────────────────────────────────────────
+// ── Home ───────────────────────────────────────────────────────
 const Home = () => {
-  const navigate = useNavigate();
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
-  const [visible, setVisible] = useState(false);
+  const navigate = useNavigate()
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
+  const [visible, setVisible] = useState(false)
 
-  // Get logged-in user name for greeting
   const storedUser = localStorage.getItem('sf_user')
   const userName = storedUser ? (() => { try { return JSON.parse(storedUser)?.name?.split(' ')[0] || '' } catch { return '' } })() : ''
 
   useEffect(() => {
-    const timer = setTimeout(() => setVisible(true), 100);
-    const handleScroll = () => setScrolled(window.scrollY > 20);
-    window.addEventListener("scroll", handleScroll);
+    const timer = setTimeout(() => setVisible(true), 100)
+    const handleScroll = () => setScrolled(window.scrollY > 20)
+    window.addEventListener("scroll", handleScroll)
     return () => {
-      clearTimeout(timer);
-      window.removeEventListener("scroll", handleScroll);
-    };
-  }, []);
+      clearTimeout(timer)
+      window.removeEventListener("scroll", handleScroll)
+    }
+  }, [])
 
   const handleLogout = () => {
     localStorage.removeItem('sf_user')
@@ -281,22 +291,19 @@ const Home = () => {
 
   return (
     <div style={styles.root}>
-      {/* Keyframes */}
       <style>{`
         @keyframes pulse { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.5);opacity:0.5} }
         @keyframes liveDot { 0%,100%{opacity:1} 50%{opacity:0.3} }
         @keyframes bounce { 0%, 60%, 100% { transform: translateY(0) } 30% { transform: translateY(-6px) } }
       `}</style>
 
-      {/* Background Effects */}
       <div style={styles.bgGlow1} />
       <div style={styles.bgGlow2} />
       <div style={styles.bgGrid} />
 
-      {/* ── NAVBAR ── */}
+      {/* NAVBAR */}
       <nav style={{ ...styles.nav, ...(scrolled ? styles.navScrolled : {}) }}>
         <div style={styles.navInner}>
-          {/* Logo */}
           <div style={styles.logo}>
             <div style={styles.logoIcon}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
@@ -307,20 +314,19 @@ const Home = () => {
             <span style={styles.logoText}>SessionFlow</span>
           </div>
 
-          {/* Desktop Nav */}
           <div style={styles.navLinks}>
             {[
-              { to: '/home',        label: 'Home' },
-              { to: '/schedule',    label: 'Schedule' },
-              { to: '/register',    label: 'Register' },
-              { to: '/attendance',  label: 'Attendance' },
-              { to: '/dashboard',   label: 'My Dashboard' },
-              { to: '/certificates',label: 'Certificates' },
-              { to: '/feedback',    label: 'Feedback' },
-              { to: '/quiz',        label: 'Quiz' },
-              { to: '/content',     label: 'Content' },
-              { to: '/faq',         label: 'FAQ' },
-              { to: '/event-admin', label: 'Event Admin' },
+              { to: '/home',         label: 'Home' },
+              { to: '/schedule',     label: 'Schedule' },
+              { to: '/register',     label: 'Register' },
+              { to: '/attendance',   label: 'Attendance' },
+              { to: '/dashboard',    label: 'My Dashboard' },
+              { to: '/certificates', label: 'Certificates' },
+              { to: '/feedback',     label: 'Feedback' },
+              { to: '/quiz',         label: 'Quiz' },
+              { to: '/content',      label: 'Content' },
+              { to: '/faq',          label: 'FAQ' },
+              { to: '/event-admin',  label: 'Event Admin' },
             ].map(({ to, label }) => (
               <NavLink key={to} to={to}
                 style={({ isActive }) => ({ ...styles.navLink, ...(isActive ? styles.navLinkActive : {}) })}>
@@ -329,7 +335,6 @@ const Home = () => {
             ))}
           </div>
 
-          {/* Right side — user greeting + logout */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
             {userName && (
               <span style={{ fontSize: 12, color: '#a78bfa', fontWeight: 600 }}>
@@ -337,14 +342,11 @@ const Home = () => {
               </span>
             )}
             <button onClick={handleLogout}
-              style={{ background: 'rgba(248,113,113,0.12)', border: '1px solid rgba(248,113,113,0.3)',
-                color: '#f87171', padding: '6px 14px', borderRadius: 8, cursor: 'pointer',
-                fontSize: 12, fontWeight: 600, fontFamily: 'inherit' }}>
+              style={{ background: 'rgba(248,113,113,0.12)', border: '1px solid rgba(248,113,113,0.3)', color: '#f87171', padding: '6px 14px', borderRadius: 8, cursor: 'pointer', fontSize: 12, fontWeight: 600, fontFamily: 'inherit' }}>
               Logout
             </button>
           </div>
 
-          {/* Mobile Hamburger */}
           <button style={styles.hamburger} onClick={() => setMenuOpen(!menuOpen)}>
             <span style={{ ...styles.bar, ...(menuOpen ? styles.bar1Open : {}) }} />
             <span style={{ ...styles.bar, ...(menuOpen ? styles.bar2Open : {}) }} />
@@ -352,7 +354,6 @@ const Home = () => {
           </button>
         </div>
 
-        {/* Mobile Menu */}
         {menuOpen && (
           <div style={styles.mobileMenu}>
             {[
@@ -375,7 +376,7 @@ const Home = () => {
         )}
       </nav>
 
-      {/* ── HERO ── */}
+      {/* HERO */}
       <section style={styles.hero}>
         <div style={{
           ...styles.heroContent,
@@ -387,20 +388,17 @@ const Home = () => {
             <span style={styles.heroBadgeDot} />
             Renovation Foundation — NGO Session Platform
           </div>
-
           <h1 style={styles.heroTitle}>
             Session{" "}
             <span style={styles.heroTitleAccent}>Automation</span>
             <br />
             Platform
           </h1>
-
           <p style={styles.heroSubtitle}>
             Register, attend, get certificates, and engage — all in one place.
             <br />
             Powered by AI for reminders, quizzes, and support.
           </p>
-
           <div style={styles.heroButtons}>
             <button style={styles.btnPrimary} onClick={() => navigate('/register')}
               onMouseEnter={e => (e.currentTarget.style.transform = "scale(1.05)")}
@@ -415,7 +413,6 @@ const Home = () => {
           </div>
         </div>
 
-        {/* Floating Hero Card */}
         <div style={{
           ...styles.heroCard,
           opacity: visible ? 1 : 0,
@@ -432,9 +429,9 @@ const Home = () => {
           </div>
           <div style={styles.heroCardBody}>
             {[
-              { time: "10:00 AM", name: "Community Leadership Workshop",   meta: "📍 Hall A • 42 registered",   badge: "LIVE",    badgeStyle: styles.sessionLive },
-              { time: "2:00 PM",  name: "Youth Empowerment Summit",         meta: "📍 Hall B • 87 registered",   badge: "Soon",    badgeStyle: styles.sessionUpcoming },
-              { time: "5:00 PM",  name: "Digital Skills Training",          meta: "📍 Online • 120 registered",  badge: "Soon",    badgeStyle: styles.sessionUpcoming },
+              { time: "10:00 AM", name: "Community Leadership Workshop",  meta: "📍 Hall A • 42 registered",  badge: "LIVE", badgeStyle: styles.sessionLive },
+              { time: "2:00 PM",  name: "Youth Empowerment Summit",        meta: "📍 Hall B • 87 registered",  badge: "Soon", badgeStyle: styles.sessionUpcoming },
+              { time: "5:00 PM",  name: "Digital Skills Training",         meta: "📍 Online • 120 registered", badge: "Soon", badgeStyle: styles.sessionUpcoming },
             ].map(s => (
               <div key={s.time} style={styles.sessionItem}>
                 <div style={styles.sessionTime}>{s.time}</div>
@@ -449,7 +446,7 @@ const Home = () => {
         </div>
       </section>
 
-      {/* ── STATS ── */}
+      {/* STATS */}
       <section style={styles.statsSection}>
         {STATS.map((stat, i) => (
           <div key={i} style={styles.statCard}
@@ -461,7 +458,7 @@ const Home = () => {
         ))}
       </section>
 
-      {/* ── FEATURES ── */}
+      {/* FEATURES */}
       <section style={styles.featuresSection}>
         <div style={styles.sectionHeader}>
           <h2 style={styles.sectionTitle}>What you can do</h2>
@@ -469,7 +466,7 @@ const Home = () => {
         </div>
         <div style={styles.featuresGrid}>
           {FEATURES.map((f, i) => (
-            <div key={i} style={{ ...styles.featureCard, cursor: 'pointer' }}
+            <div key={i} style={{ ...styles.featureCard }}
               onClick={() => {
                 const path = f.title === 'My Dashboard' ? '/dashboard'
                   : f.title === 'Event Admin' ? '/event-admin'
@@ -497,7 +494,7 @@ const Home = () => {
         </div>
       </section>
 
-      {/* ── HOW IT WORKS ── */}
+      {/* HOW IT WORKS */}
       <section style={styles.howSection}>
         <div style={styles.sectionHeader}>
           <h2 style={styles.sectionTitle}>How it works</h2>
@@ -520,7 +517,7 @@ const Home = () => {
         </div>
       </section>
 
-      {/* ── HELP ── */}
+      {/* HELP */}
       <section style={styles.helpSection}>
         <div style={styles.helpCard}>
           <div style={styles.helpGlow} />
@@ -534,7 +531,7 @@ const Home = () => {
         </div>
       </section>
 
-      {/* ── FOOTER ── */}
+      {/* FOOTER */}
       <footer style={styles.footer}>
         <div style={styles.footerInner}>
           <div style={styles.logo}>
@@ -555,23 +552,16 @@ const Home = () => {
         </div>
       </footer>
     </div>
-  );
-};
+  )
+}
 
 // ── App Router ─────────────────────────────────────────────────
 export default function App() {
   return (
     <Router>
       <Routes>
-        {/* Root → home (let RequireAuth handle it) */}
         <Route path="/" element={<Navigate to="/home" replace />} />
-
-        {/* Login — redirect to /home if already logged in */}
-        <Route path="/login" element={
-          <RedirectIfAuthed><AuthPage /></RedirectIfAuthed>
-        } />
-
-        {/* All protected routes */}
+        <Route path="/login" element={<RedirectIfAuthed><AuthPage /></RedirectIfAuthed>} />
         <Route path="/home"         element={<RequireAuth><Home /></RequireAuth>} />
         <Route path="/schedule"     element={<RequireAuth><SchedulePage /></RequireAuth>} />
         <Route path="/register"     element={<RequireAuth><RegisterPage /></RequireAuth>} />
@@ -583,12 +573,9 @@ export default function App() {
         <Route path="/content"      element={<RequireAuth><ContentPage /></RequireAuth>} />
         <Route path="/faq"          element={<RequireAuth><FAQPage /></RequireAuth>} />
         <Route path="/event-admin"  element={<RequireAuth><EventAdminPage /></RequireAuth>} />
-
-        {/* Catch-all → login */}
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
       <ChatAssistant />
     </Router>
-  );
+  )
 }
-
