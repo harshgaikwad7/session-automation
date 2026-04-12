@@ -10,3 +10,4 @@ reportlab
 python-multipart
 httpx
 anthropic
+email-validator
